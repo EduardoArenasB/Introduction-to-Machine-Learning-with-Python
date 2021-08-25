@@ -1,0 +1,81 @@
+#Pandas Introduction
+
+#The series data structures
+
+import pandas as pd
+
+#creando lista de tres estudiantes
+
+students = ['Alice', 'Jack', 'Molly']
+
+#Ahora usamos la funcion de serie de pandas
+pd.Series(students)
+
+#ahora hacemos una serie pero con numeros
+
+numbers = [ 1, 2, 3]
+
+pd.Series(numbers)
+
+#Podemos notar que el tipo de objeto en strings es  ''object'' y en numeros es ''int64''
+
+#Usando None o NaN en series de strings y numeros
+
+students = ['Alice', 'Jack', None]
+
+pd.Series(students)
+
+numbers = [ 1, 2, None]
+
+pd.Series(numbers)
+
+# en strings generamos un objeto -none- y en numeros un -nan- con la serie en float64
+
+#NaN y none son DIFERENTES cuando se hace pruebas de igualdad SIEMPRE sera falsa
+
+import numpy as np
+np.nan == None
+
+# es mas un NAN y otro NaN NO son IGUALES
+
+np.nan == np.nan
+
+#los NaN y los None son conceptualmente iguales podemos usar la libreria pandas con su funcion isnan() para manipularlos de mejor manera
+
+np.isnan(np.nan)
+
+#mas formas de crear series en pandas
+
+#desde un diccionario
+students_scores = {'Alice' : 'Physics', 'Jack' : 'Chemistry', 'Molly' : 'English'}
+s = pd.Series(students_scores)
+print(s)
+
+s.index
+
+#aqui podemos notar que las primeras strings del diccionario se convierten en los indices de su complemento
+
+#el funcionamiento con tuplas es diferente
+
+students = [('Alice', 'Brown'),('Jack', 'White'), ('Molly', 'Green')]
+pd.Series(students)
+
+#como podemos notar, en tuplas el indice se genera como en liostas y cada tupla corresponde a un valor del indice
+
+
+#Otra forma de crear una serie es de forma mas explicita donde nosotros elegimos el valor del indice tal cual ademas de
+#su valor 
+
+s = pd.Series(['Physics', 'Chemistry', 'English'], index = ['Alice', 'Jack', 'Molly'])
+print(s)
+
+#logramos lo mismo que con el diccionario
+
+
+
+#Ahora si creamos un diccionario y hacemos el indice con un valor que no estaba en nuestro diccionario este valor en el indice sera
+#un NaN o un None segun corresponda
+
+students_scores = {'Alice' : 'Physics', 'Jack' : 'Chemistry', 'Molly' : 'English'}
+s = pd.Series(students_scores, index = ['Alice', 'Molly', 'Sam'])
+print(s)
