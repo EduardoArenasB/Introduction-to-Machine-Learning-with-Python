@@ -1,0 +1,125 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Aug 22 20:26:08 2021
+
+@author: darth
+"""
+
+import pandas as pd #Importar libreria Pandas
+df = pd.read_csv('Admission_Predict.csv') #Leer el archivo
+
+df.head() #Visualizarlo en la consola
+
+df = pd.read_csv('Admission_Predict.csv', index_col=0) #Indicamos que el indice comience en 1 en vez de 0
+df.head()
+
+new_dt = df.rename(columns={'GRE Score':'GRE Score','TOEFL Score':'TOEFL Score','University Rating':'University Rating','SOP':'Statement of Purpose',
+                            'LOR ':'Letter of Recommentation','CGPA':'CGPA','Research':'Research','Chance of Admit':'Chance of Admit'})
+#con lo anterior podemos cambiar el nombre de las columnas a conveniencia es importante que notes que debes escribir exactamente igual como est[a]
+new_dt.head()
+
+
+new_dt.columns #Visualizamos en consola una lista de las columnas del dataset
+
+new_dt = new_dt.rename(mapper=str.strip, axis='columns') #quita los espacios en blanco de todas las columnas
+new_dt.head()
+
+new_dt.columns
+
+#Este cogido nos ayuda a quitar el problema es espacios de fuente, haciendo todo en minusculas ademas de quitar los espacios.
+cols = list(df.columns)
+cols = [x.lower().strip() for x in cols]
+df.columns=cols
+df.head()
+
+#CONSULTANDO UN DATAFRAME
+
+admit_mask = df['chance of admit'] > 0.7 #Creas una 'mascara' booleana sobre un dato en particular
+
+df.where(admit_mask).head #si tenemos nuestro df y tenemos una mascara, enmascaramos de nuevo .sobre los resultados reales de la primer mascara
+df.where(admit_mask).dropna().head() #Quitar filas con NA's
+
+df[df['chance of admit'] > 0.7]  #Todo lo anterios en un solo codigo
+
+df['toefl score'].head() #Ver una sola columna
+
+df[['gre score','toefl score']].head() #Consultar una o mas columnas
+
+df[df['gre score']>320].head() #consultar todo el df respecto a un valor en cierta columna
+
+(df['chance of admit'] > 0.7) & (df['chance of admit'] < 0.9) #nos genera una mascara booleana donde ambas condiciones se deben cumplir siempre usar ()
+
+df['chance of admit'].gt(0.7).lt(0.9) #lo mismo de arriba mas simplificado, sirve para <>
+
+df = pd.read_csv('class_grades.csv')
+df.head(10)  #el numero es la cantidad de filas que van a ser visualizadas en la consola
+mask = df.isnull() #creamos una mascara booleana donde los false representan a los valores no NaN
+mask.head(10) 
+df.dropna().head(10) #Tira todas las filas que contengan NaN
+
+df.fillna(0 , inplace = True)
+df.head(10)
+
+
+dsf = pd.read_csv('log.csv')
+dsf.head(20)
+
+dsf = dsf.set_index('time') #coloca la columna que deseamos ver al inicio
+dsf = dsf.sort_index() #ordena el dataframe por valores
+dsf.head(20)
+
+
+dsf = dsf.reset_index()
+dsf = dsf.set_index(['time', 'user'])
+dsf.head(20)
+dsf = dsf.fillna(method = 'ffill')
+dsf.head()
+
+dsf.replace('', 1) #REEMPLAZA UN VALOR POR OTRO
+
+dsf = pd.read_csv('log.csv')
+dsf.head()
+dsf.replace(to_replace='.*html$', value = 'webpage', regex =True)
+
+
+#Ejemplo de la manipulacion de dataframes
+
+import pandas as pd
+df = pd.read_csv('presidents.csv')
+df.head()
+
+#Aui vamos a copiar la columan de presidentes, ponerla al final del dataset y quitar apellidos para que quede su nombre de pila unicamente en la columna FIRST
+df['First']=df['President']
+df['First']=df['First'].replace('[ ].*','', regex=True)
+df.head()
+#PERO ES UN METODO INSERVIBLE ASI QUE BORRAMOS
+
+del(df['First']) #Eliminar columnas
+
+#HAGAMOS LO QUE QUERIAMOS CON UNA FUNCION
+def splitname(row):
+    row['First']=row['President'].split(' ')[0]
+    row['Last']=row['President'].split(' ')[-1]
+    return row
+#Aplicando en dataset tenemos
+df=df.apply(splitname,axis='columns')
+df.head()
+
+pattern = '(^[\w]*)(?:.* )([\w]*$)'
+df['President'].str.extract(pattern).head()
+
+pattern='(?P<First>^[\w]*)(?:.* )(?P<Last>[\w]*$)'
+names = df['President'].str.extract(pattern).head()
+
+df['First']=names['First']
+df['Last']=names['Last']
+df.head()
+
+#Ahora arreglamos las fechas
+df['Born']=df['Born'].str.extract('([\w]{3} [\w]{1,2}, [\w]{4})')
+df['Born'].head()
+
+
+#ahora con una funcion en pandas nativa
+df['Born']=pd.to_datetime(df['Born'])
+df['Born'].head()
