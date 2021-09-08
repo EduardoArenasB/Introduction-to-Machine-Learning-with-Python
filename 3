@@ -1,0 +1,438 @@
+#Merging dataframes
+
+import pandas as pd
+
+#Creamos un dataframe
+staff_df = pd.DataFrame([{'Name': 'Kelly', 'Role': 'Director of HR'},
+                         {'Name': 'Sally', 'Role': 'Course liasion'},
+                         {'Name': 'James', 'Role': 'Grader'}])
+
+#Ordenamos por nombre
+staff_df = staff_df.set_index('Name')
+
+#Creamos un segundo dataframe
+student_df = pd.DataFrame([{'Name': 'James', 'School': 'Business'},
+                         {'Name': 'Mike', 'School': 'Law'},
+                         {'Name': 'Sally', 'School': 'Engineering'}])
+
+#y volvemos a ordenarla por nombre
+student_df = student_df.set_index('Name')
+
+#imprimimos ambos
+print(staff_df.head())
+print(student_df.head())
+
+#Fusionamos las tablas con el siguiente codigo monstrandonos todos
+pd.merge(staff_df, student_df, how = 'outer', left_index= True, right_index= True)
+
+#Fusionamos pero solo se muestra los que cumplen
+pd.merge(staff_df, student_df, how = 'inner', left_index= True, right_index= True)
+
+#Fusion que nos muestra el resultado en funcion de el dataframe de la izquierda, osea staff
+pd.merge(staff_df, student_df, how = 'left', left_index= True, right_index= True)
+
+#Fusion que nos muestra el resultado en funcion de el dataframe de la derecha, osea student
+pd.merge(staff_df, student_df, how = 'right', left_index= True, right_index= True)
+
+#reseteamos el indice
+staff_df = staff_df.reset_index()
+student_df = student_df.reset_index()
+
+#fusion respecto a una columna
+pd.merge(staff_df, student_df, how = 'right', on = 'Name')
+
+
+#para ver los posibloes conflicos en el ejercicio vamos a crear otro DF
+staff_df = pd.DataFrame([{'Name': 'Kelly', 'Role': 'Director of HR', 'Location':'State Street'},
+                         {'Name': 'Sally', 'Role': 'Course liasion', 'Location':'Washington Avenue'},
+                         {'Name': 'James', 'Role': 'Grader', 'Location':'Washington Avenue'}])
+
+student_df = pd.DataFrame([{'Name': 'James', 'School': 'Business', 'Location':'1024 Billiard Avenue'},
+                         {'Name': 'Mike', 'School': 'Law', 'Location':'Fraternity House #22'},
+                         {'Name': 'Sally', 'School': 'Engineering', 'Location':'512 Wilson Crescent'}])
+
+pd.merge(staff_df, student_df, how = 'left', on = 'Name')
+
+
+#para buscar algo respecto dos columnas
+
+staff_df = pd.DataFrame([{'Name': 'Kelly', 'Last': 'Desjardins', 'Role':'Director of HR'},
+                         {'Name': 'Sally', 'Last': 'Brooks', 'Role':'Course Liasion'},
+                         {'Name': 'James', 'Last': 'Wilde', 'Role':'Grader'}])
+
+student_df = pd.DataFrame([{'Name': 'James', 'Last': 'Hammond', 'School':'Business'},
+                         {'Name': 'Mike', 'Last': 'Law', 'School':'Law'},
+                         {'Name': 'Sally', 'Last': 'Brooks', 'School':'Engineering'}])
+
+
+
+pd.merge(staff_df, student_df, how = 'inner', on = ['Name', 'Last'])
+
+pd.merge(staff_df, student_df, how = 'outer', on = ['Name', 'Last'])
+
+
+#para concatenar dt con columnas iguales hacemos una variable que contenga dichos df
+#frames = [df2011,df2012,df2013]
+#pd.concat(frames)
+
+
+#Panda Idioms
+
+import pandas as pd
+import numpy as np
+
+import timeit #funcionalidad de timing
+
+df = pd.read_csv('census.csv')
+
+#chaining methods
+
+(df.where(df['SUMLEV']==50)
+     .dropna().set_index(['STNAME','CTYNAME'])
+     .rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'}))
+
+#primero creamos un nuevo dataframe a partir del original
+df = df[df['SUMLEV']==50]
+#ACTUALIZAMOS EL DF para que tenga un nuevo indice
+df.set_index(['STNAME','CTYNAME'], inplace = True)
+#cambiamos el nombre de la columna para mejor visualizacion
+df.rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'})
+
+def first_aproach():
+    global df
+    return (df.where(df['SUMLEV']==50)
+     .dropna().set_index(['STNAME','CTYNAME'])
+     .rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'}))
+
+
+df = pd.read_csv('census.csv')
+
+
+timeit.timeit(first_aproach, number=10)
+
+
+def second_aproach():
+    global df
+    new_df = df[df['SUMLEV']==50]
+    new_df.set_index(['STNAME','CTYNAME'], inplace = True)
+    return new_df.rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'})
+
+df = pd.read_csv('census.csv')
+
+timeit.timeit(second_aproach, number=10)
+
+
+#conocer el min y max de una columna o varias 
+
+def min_max(row):
+    data = row[['POPESTIMATE2010',
+                'POPESTIMATE2011',
+                'POPESTIMATE2012',
+                'POPESTIMATE2013',
+                'POPESTIMATE2014',
+                'POPESTIMATE2015']]
+    return pd.Series({'min': np.min(data),'max': np.max(data)})
+
+df.apply(min_max, axis = 'columns').head()
+
+
+#la siguien funcion hace que los demas valores no desaparezcan alv
+def min_max(row):
+    data = row[['POPESTIMATE2010',
+                'POPESTIMATE2011',
+                'POPESTIMATE2012',
+                'POPESTIMATE2013',
+                'POPESTIMATE2014',
+                'POPESTIMATE2015']]
+    #creando una nueva entrada para max
+    row['max'] = np.max(data)
+    #creando una nueva entrada para min
+    row['min'] = np.min(data)
+    return row
+
+
+df.apply(min_max, axis='columns')
+
+#ahora con lambdas
+
+rows = ['POPESTIMATE2010','POPESTIMATE2011','POPESTIMATE2012','POPESTIMATE2013','POPESTIMATE2014','POPESTIMATE2015']
+
+df.apply(lambda x: np.max(x[rows]), axis = 1).head()
+
+#GroupBy
+
+import pandas as pd
+import numpy as np
+
+
+df = pd.read_csv('census.csv')
+
+df = df[df['SUMLEV']==50]
+
+#sacar el promedio de poblacion por estado 
+for state in df['STNAME'].unique():
+    avg = np.average(df.where(df['STNAME']==state).dropna()['CENSUS2010POP'])
+    print('Counties in state ' + state + ' have an average population of ' + str(avg))
+
+
+#con pandas primero agrupamos
+for group, frame in df.groupby('STNAME'): #GROUP BY REGRESA TUPLAS
+    avg = np.average(frame['CENSUS2010POP'])  #CALCULAMOS EL PROMEDIO DE UNA COLUMNA EN ESTE CASO DE POBLACION
+    print('Counties in state ' + group + ' have an average population of ' + str(avg)) #esto es poderozamente rapidisimo jeje
+    
+df = df.set_index('STNAME')
+
+def set_batch_number(item):    
+    if item[0]<'M':
+        return 0
+    if item[0]<'Q':
+        return 1
+    return 2
+
+#agrupamos bajo un parametro
+for group, frame in df.groupby(set_batch_number):
+    print('There are ' + str(len(frame)) + ' records in group ' + str(group) + ' for processing')
+
+
+df = pd.read_csv('listings.csv')
+df.head()
+
+#haciendo un multi indice
+
+df = df.set_index(['cancellation_policy', 'review_scores_value'])
+
+for group, frame in df.groupby(level=(0,1)):#agrupar por dos columnas
+    print(group)
+
+
+def grouping_fun(item):
+    if item[1] == 10:
+        return(item[0],'10.0')
+    else:
+        return (item[0], 'not 10.0')
+    
+for group, frame in df.groupby(by = grouping_fun):#agrupar bajo una columna con una condicion
+    print(group)
+
+df.head()
+
+
+#Aggregation en pandas
+
+#resetear el df
+
+df = df.reset_index()
+
+df.groupby('cancellation_policy').agg({'review_scores_value':np.average}) #no quitas los NAN
+
+
+df.groupby('cancellation_policy').agg({'review_scores_value':np.nanmean}) #agrupamos por valor de columna y agregamos otra donde le sacamos el promedio
+
+
+df.groupby('cancellation_policy').agg({'review_scores_value':(np.nanmean, np.nanstd),'reviews_per_month':np.nanmean})
+#agrupamos por politica de cancelacion, agregando la media de las rese;as, su desviacion estandar y la media de las rese;as por mes
+
+
+#Transformation
+
+cols = ['cancellation_policy','review_scores_value'] #hacemos una lista con colimnas que queremos
+
+transform_df = df[cols].groupby('cancellation_policy').transform(np.nanmean) #metemos lo valores en la lista que hicimos
+transform_df.head()
+
+transform_df.rename({'review_scores_value':'mean_review_score'},axis = 'columns', inplace = True)
+df = df.merge(transform_df, left_index = True, right_index = True)
+df.head()
+#agregamos los valores de la media en el dataframe original
+
+df['mean_diff'] = np.absolute(df['review_scores_value']-df['mean_review_score'])
+df['mean_diff'].head()
+#restamos una columan con otra
+
+#Filtering
+
+df.groupby('cancellation_policy').filter(lambda x: np.nanmean(x['review_scores_value'])>9.2)
+#filtramos los valores que sean mayores a 9.2 segun las rese;as todo ordenado por la politica de cancelacion
+
+
+#applying
+
+df = pd.read_csv('listings.csv')
+
+df = df[['cancellation_policy', 'review_scores_value']]
+df.head()
+
+def calc_mean_review_scores(group):
+    avg = np.nanmean(group['review_scores_value'])
+    group['review_scores_mean'] = np.abs(avg-group['review_scores_value'])
+    return group
+
+df.groupby('cancellation_policy').apply(calc_mean_review_scores).head()
+
+x = df.groupby('cancellation_policy').apply(calc_mean_review_scores)
+
+#generamos una lista con dos columnas de interes, hacemos la funcion que nos regresara el resultado de la resta entre
+#la media menos el valor de la reseña individual
+
+
+#Scales
+
+import pandas as pd
+
+df = pd.DataFrame(['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D'],
+                  index = ['excellent', 'excellent', 'excellent', 'good','good','good', 'ok','ok','ok','poor','poor'],
+                  columns = ['Grades'])
+
+print(df)
+
+df['Grades'].astype('category').head() #cambiamos el tipo a variable categorica con astype
+
+my_categories = pd.CategoricalDtype(categories= ['D','D+','C-','C','C+','B-','B','B+','A-','A','A+'],
+                                    ordered=True)
+
+grades = df['Grades'].astype(my_categories) #ordenamos manual de menor a mayor segun corresponda, decimos true a que el orden es el correcto
+grades.head()                               #agregamos el orden a nuestra primer diccionario.
+
+import numpy as np
+
+df = pd.read_csv('census.csv')
+
+df = df[df['SUMLEV']==50]
+
+df = df.set_index('STNAME').groupby(level=0)['CENSUS2010POP'].agg(np.average)
+
+
+pd.cut(df,10)
+
+
+#Pivot Table
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('cwurData.csv')
+df.head()
+
+def create_category(ranking):
+    if(ranking >= 1) & (ranking <= 100):
+        return 'First Tier Top University'
+    elif(ranking >= 101) & (ranking <= 200):
+        return 'Second Tier Top University'
+    elif(ranking >= 201) & (ranking <= 300):
+        return 'Third Tier Top University'
+    return "Other Top University"
+
+df['Rank_Level'] = df['world_rank'].apply(lambda x: create_category(x))
+df.head()
+
+#haciendo la tabla pivote
+
+df.pivot_table(values = 'score', index = 'country', columns = 'Rank_Level', aggfunc=[np.mean]).head()
+
+
+df.pivot_table(values = 'score', index = 'country', columns = 'Rank_Level', aggfunc=[np.mean, np.max]).head()
+
+
+df.pivot_table(values = 'score', index = 'country', columns = 'Rank_Level', aggfunc=[np.mean, np.max],
+               margins=True).head()
+
+new_df = df.pivot_table(values = 'score', index = 'country', columns = 'Rank_Level', aggfunc=[np.mean, np.max],
+               margins=True)
+
+
+print(new_df.index)
+
+new_df['mean']['First Tier Top University'].head()
+
+
+new_df['mean']['First Tier Top University'].idxmax()
+
+
+new_df = new_df.stack()
+new_df.head()
+
+x = new_df = new_df.stack()
+
+new_df.unstack().head()
+
+
+#Timestamp
+
+import pandas as pd
+import numpy as np
+
+
+pd.Timestamp('9/1/2019 10:05AM') #CREANDO UNA MARCA DE TIEMPO
+
+
+pd.Timestamp(2019,12,20,0,0) #Otra forma de hacer una m,arca de tiempo
+
+pd.Timestamp(2019,12,20,0,0).isoweekday() #con formato iso
+
+pd.Timestamp(2019,12,20,5,2,22).second#cuantos segundos habia en la marca de tiempo
+
+pd.Period('1/2016')
+
+pd.Period('3/5/2016')#los periodos estan definidos por el dato mas peque;o que le damos, en est[e caso dias]
+
+pd.Period('1/2016')+5
+
+pd.Period('3/5/2016') - 2
+
+#recuerda siempre el formato de fecha que estas usando
+
+#DatetimeIndex and PeriodIndex
+
+t1 = pd.Series(list('abc'), [pd.Timestamp('2016-09-01'), pd.Timestamp('2016-09-02'),
+                             pd.Timestamp('2016-09-03')])
+
+print(t1)
+
+type(t1.index)
+
+
+#convirtiendo a datetime
+
+d1 = ['2 June 2013', 'Aug 29, 2014', '2015-06-26', '7/12/16']
+ts3 = pd.DataFrame(np.random.randint(10, 100, (4,2)), index = d1,
+                    columns = list ('ab'))
+
+print(ts3)
+
+ts3.index = pd.to_datetime(ts3.index) #convierte varios formatos de fecha en uno solo
+
+pd.to_datetime('4.7.12', dayfirst = True)
+
+#Timedelta
+
+pd.Timestamp('9/3/2016') - pd.Timestamp('9/1/2016')
+
+
+pd.Timestamp('9/2/2016 8:10AM') + pd.Timedelta('12D 3H')
+
+#Offset
+
+pd.Timestamp('9/4/2016').weekday()
+
+pd.Timestamp('9/4/2016') + pd.offsets.Week()
+
+pd.Timestamp('9/4/2016') + pd.offsets.MonthEnd()
+
+#Working with dates in a dataframe
+
+dates = pd.date_range('10-01-2016', periods = 9, freq = '2W-SUN')
+print(dates)
+
+dates = pd.date_range('10-01-2016', periods = 9, freq = 'B')
+print(dates)
+
+dates = pd.date_range('10-01-2016', periods = 12, freq = 'QS-JUN')
+print(dates)
+
+
+
+dates = pd.date_range('10-01-2016', periods = 9, freq = '2W-SUN')
+
+df =pd.DataFrame({'Count 1': 100 + np.random.randint(-5,10,9).cumsum(),
+                  'Count 2': 120 + np.random.randint(-5,10,9)}, index=dates)
+
+print(df)
